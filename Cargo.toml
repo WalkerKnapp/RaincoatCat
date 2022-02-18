@@ -1,0 +1,13 @@
+[package]
+name = "raincoat_cat"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+tokio = { version = "^1.16.1", features = ["macros", "rt-multi-thread"] }
+
+serenity = { version = "^0.10", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "unstable_discord_api"] }
+
+serde = { version = "^1.0.136", features = ["derive"] }
+toml = "^0.5.8"
