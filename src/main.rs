@@ -1,13 +1,40 @@
 mod config;
+mod commands;
 
 use serenity::async_trait;
+use serenity::model::gateway::Ready;
+use serenity::model::id::GuildId;
+use serenity::model::interactions::Interaction;
 use serenity::prelude::*;
 
 struct RaincoatCatEventHandler;
 
 #[async_trait]
 impl EventHandler for RaincoatCatEventHandler {
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        println!("Connected to discord as {}#{}", ready.user.name, ready.user.discriminator);
 
+        let guild_id = GuildId(299658323500990464);
+
+        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, commands::create_commands).await;
+
+        println!("Created guild slash commands: {:#?}", commands);
+    }
+
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        println!("Processing Interaction: {:#?}", interaction);
+        match &interaction {
+            Interaction::ApplicationCommand(command) => {
+                commands::create_command_response(ctx, command).await;
+            }
+            Interaction::MessageComponent(component) => {
+                commands::create_component_response(ctx, component).await;
+            }
+            _ => {
+                eprintln!("Unexpected interaction type: {:?}", &interaction.kind());
+            }
+        }
+    }
 }
 
 #[tokio::main]
