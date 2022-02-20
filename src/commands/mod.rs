@@ -1,11 +1,13 @@
 mod role;
 
+use sea_orm::DatabaseConnection;
 use serenity::builder::CreateApplicationCommands;
 use serenity::model::interactions::application_command::ApplicationCommandInteraction;
 use serenity::model::interactions::InteractionResponseType;
 use serenity::model::prelude::InteractionApplicationCommandCallbackDataFlags;
 use serenity::model::prelude::message_component::MessageComponentInteraction;
 use serenity::prelude::*;
+use crate::error::RaincoatError;
 
 pub fn create_commands(commands: &mut CreateApplicationCommands) -> &mut CreateApplicationCommands {
     role::create_command(commands);
@@ -13,43 +15,32 @@ pub fn create_commands(commands: &mut CreateApplicationCommands) -> &mut CreateA
     commands
 }
 
-pub async fn create_command_response(ctx: Context, command: &ApplicationCommandInteraction) {
+pub async fn create_command_response(db: &DatabaseConnection, ctx: &Context, command: &ApplicationCommandInteraction) -> Result<(), RaincoatError> {
     match command.data.name.as_str() {
         "role" => {
-            role::create_response(ctx, command).await;
+            role::create_response(db, ctx, command).await
         }
         _ => {
-            if let Err(err) = command.create_interaction_response(&ctx.http, |response| {
+            command.create_interaction_response(&ctx.http, |response| {
                 response.kind(InteractionResponseType::ChannelMessageWithSource)
                     .interaction_response_data(|message| message
                         .content("Unknown command")
                         .flags(InteractionApplicationCommandCallbackDataFlags::EPHEMERAL))
-            }).await {
-                println!("Cannot respond to slash command: {}", err);
-            }
+            }).await.map_err(|err| RaincoatError { cause: format!("Failed to respond to command: {}", err) })
         }
-    };
+    }
 }
 
-pub async fn create_component_response(ctx: Context, component: &MessageComponentInteraction) {
+pub async fn create_component_response(db: &DatabaseConnection, ctx: &Context, component: &MessageComponentInteraction) -> Result<(), RaincoatError> {
     match component.data.custom_id.as_str() {
         "role_select" => {
-            // TODO: Give roles based on component.data.values
-            if let Err(err) = component.create_interaction_response(&ctx.http, |response| {
-                response.kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|message| message.content("Gave role XYZ!")
-                        .flags(InteractionApplicationCommandCallbackDataFlags::EPHEMERAL))
-            }).await {
-                println!("Cannot respond to message component: {}", err);
-            }
+            role::create_component_response(db, ctx, component).await
         }
         _ => {
-            if let Err(err) = component.create_interaction_response(&ctx.http, |response| {
+            component.create_interaction_response(&ctx.http, |response| {
                 response.kind(InteractionResponseType::ChannelMessageWithSource)
                     .interaction_response_data(|message| message.content("Unknown component"))
-            }).await {
-                println!("Cannot respond to message component: {}", err);
-            }
+            }).await.map_err(|err| RaincoatError { cause: format!("Failed to respond to component: {}", err) })
         }
     }
 }

@@ -4,7 +4,8 @@ use serde::Deserialize;
 #[derive(Deserialize, Clone)]
 pub struct Config {
     pub discord_application_id: u64,
-    pub discord_bot_token: String
+    pub discord_bot_token: String,
+    pub postgres_password: String
 }
 
 pub fn load_config() -> Config {
