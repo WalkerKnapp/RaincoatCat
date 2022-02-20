@@ -4,7 +4,7 @@ mod model;
 mod error;
 
 use sqlx::postgres::PgPoolOptions;
-use sea_orm::{DatabaseConnection, SqlxPostgresConnector};
+use sea_orm::{DatabaseConnection, SqlxPostgresConnector, EntityTrait};
 
 use serenity::async_trait;
 use serenity::model::gateway::Ready;
@@ -13,20 +13,35 @@ use serenity::model::interactions::{Interaction, InteractionResponseType};
 use serenity::model::prelude::InteractionApplicationCommandCallbackDataFlags;
 use serenity::prelude::*;
 
+use crate::model::server;
+
 struct RaincoatCatEventHandler {
     db: DatabaseConnection
 }
 
 #[async_trait]
 impl EventHandler for RaincoatCatEventHandler {
-    async fn ready(&self, ctx: Context, ready: Ready) {
-        println!("Connected to discord as {}#{}", ready.user.name, ready.user.discriminator);
-
+    async fn cache_ready(&self, ctx: Context, servers: Vec<GuildId>) {
         let guild_id = GuildId(299658323500990464);
 
-        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, commands::create_commands).await;
+        let cmds = GuildId::set_application_commands(&guild_id, &ctx.http, commands::create_commands).await
+            .expect("Failed to create application commands");
 
-        println!("Created guild slash commands: {:#?}", commands);
+        // Set initial command permissions for every server we are in
+        for server in &servers {
+            // Get the mod role for this server, if present
+            if let Some(server_model) = server::Entity::find_by_id(server.0 as i64).one(&self.db).await
+                .expect("DB lookup failed") {
+
+                server.set_application_commands_permissions(&ctx.http, |f| {
+                    commands::set_command_permissions(server_model.mod_role_id as u64, f, &cmds)
+                }).await.expect(format!("Could not set application permissions for server {}", server.0).as_str());
+            }
+        }
+    }
+
+    async fn ready(&self, _ctx: Context, ready: Ready) {
+        println!("Connected to discord as {}#{}", ready.user.name, ready.user.discriminator);
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {

@@ -66,6 +66,9 @@ async fn role_select_menu(db: &DatabaseConnection, ctx: &Context, server_id: Gui
             option.emoji(emoji.clone().try_into()
                 .map_err(|_err| RaincoatError { cause: format!("Invalid emoji for role {}", cached_role.name) })?);
         }
+        if let Some(description) = &role.description {
+            option.description(description.clone());
+        }
         option.default_selection(user.roles.contains(&RoleId(role.role_id as u64)));
         options.push(option);
     }
