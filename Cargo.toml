@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 
 tokio = { version = "^1.16.1", features = ["macros", "rt-multi-thread"] }
+chrono = "^0.4.19"
 
 serenity = { version = "^0.10", default-features = false, features = ["client", "gateway", "cache", "rustls_backend", "model", "unstable_discord_api"] }
 

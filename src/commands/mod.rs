@@ -1,5 +1,6 @@
 mod role;
 mod manage_roles;
+mod verification;
 
 use sea_orm::DatabaseConnection;
 use serenity::builder::{CreateApplicationCommands, CreateApplicationCommandsPermissions};
@@ -13,6 +14,7 @@ use crate::error::RaincoatError;
 pub fn create_commands(commands: &mut CreateApplicationCommands) -> &mut CreateApplicationCommands {
     role::create_command(commands);
     manage_roles::create_command(commands);
+    verification::create_command(commands);
 
     commands
 }
@@ -32,6 +34,12 @@ pub fn set_command_permissions<'a>(mod_role: u64, updater: &'a mut CreateApplica
                     manage_roles::create_permissions(mod_role, c)
                 });
             }
+            "verification" => {
+                updater.create_application_command(|c| {
+                    c.id(command.id.0);
+                    verification::create_permissions(mod_role, c)
+                });
+            }
             _ => {}
         }
     }
@@ -48,6 +56,9 @@ pub async fn create_command_response(db: &DatabaseConnection, ctx: &Context, com
         }
         "removerole" => {
             manage_roles::create_remove_response(db, ctx, command).await
+        }
+        "verification" => {
+            verification::create_response(db, ctx, command).await
         }
         _ => {
             command.create_interaction_response(&ctx.http, |response| {

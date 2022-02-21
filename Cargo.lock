@@ -1007,6 +1007,7 @@ dependencies = [
 name = "raincoat_cat"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "sea-orm",
  "serde",
  "serenity",
