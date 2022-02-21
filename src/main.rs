@@ -10,6 +10,7 @@ use sea_orm::{DatabaseConnection, SqlxPostgresConnector, EntityTrait, QueryFilte
 use sea_orm::ActiveValue::Set;
 
 use serenity::async_trait;
+use serenity::builder::CreateApplicationCommands;
 use serenity::cache::Cache;
 use serenity::client::bridge::gateway::GatewayIntents;
 use serenity::http::Http;
@@ -18,6 +19,7 @@ use serenity::model::gateway::Ready;
 use serenity::model::guild::{Guild, Member};
 use serenity::model::id::{GuildId, RoleId};
 use serenity::model::interactions::{Interaction, InteractionResponseType};
+use serenity::model::interactions::application_command::ApplicationCommand;
 use serenity::model::prelude::InteractionApplicationCommandCallbackDataFlags;
 use serenity::prelude::*;
 
@@ -133,9 +135,12 @@ impl RaincoatCatEventHandler {
 #[async_trait]
 impl EventHandler for RaincoatCatEventHandler {
     async fn cache_ready(&self, ctx: Context, servers: Vec<GuildId>) {
-        let guild_id = GuildId(299658323500990464);
+        /*let guild_id = GuildId(299658323500990464);
 
         let cmds = GuildId::set_application_commands(&guild_id, &ctx.http, commands::create_commands).await
+            .expect("Failed to create application commands");*/
+
+        let cmds = ApplicationCommand::set_global_application_commands(&ctx.http, commands::create_commands).await
             .expect("Failed to create application commands");
 
         // Set initial command permissions for every server we are in
