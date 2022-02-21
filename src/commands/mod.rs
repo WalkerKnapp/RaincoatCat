@@ -1,6 +1,7 @@
 mod role;
 mod manage_roles;
 mod verification;
+mod punishments;
 
 use sea_orm::DatabaseConnection;
 use serenity::builder::{CreateApplicationCommands, CreateApplicationCommandsPermissions};
@@ -15,6 +16,7 @@ pub fn create_commands(commands: &mut CreateApplicationCommands) -> &mut CreateA
     role::create_command(commands);
     manage_roles::create_command(commands);
     verification::create_command(commands);
+    punishments::create_command(commands);
 
     commands
 }
@@ -40,6 +42,30 @@ pub fn set_command_permissions<'a>(mod_role: u64, updater: &'a mut CreateApplica
                     verification::create_permissions(mod_role, c)
                 });
             }
+            "dunce" => {
+                updater.create_application_command(|c| {
+                    c.id(command.id.0);
+                    punishments::create_permissions(mod_role, c)
+                });
+            }
+            "undunce" => {
+                updater.create_application_command(|c| {
+                    c.id(command.id.0);
+                    punishments::create_permissions(mod_role, c)
+                });
+            }
+            "ban" => {
+                updater.create_application_command(|c| {
+                    c.id(command.id.0);
+                    punishments::create_permissions(mod_role, c)
+                });
+            }
+            "unban" => {
+                updater.create_application_command(|c| {
+                    c.id(command.id.0);
+                    punishments::create_permissions(mod_role, c)
+                });
+            }
             _ => {}
         }
     }
@@ -59,6 +85,18 @@ pub async fn create_command_response(db: &DatabaseConnection, ctx: &Context, com
         }
         "verification" => {
             verification::create_response(db, ctx, command).await
+        }
+        "dunce" => {
+            punishments::create_dunce_response(db, ctx, command).await
+        }
+        "undunce" => {
+            punishments::create_undunce_response(db, ctx, command).await
+        }
+        "ban" => {
+            punishments::create_ban_response(db, ctx, command).await
+        }
+        "unban" => {
+            punishments::create_unban_response(db, ctx, command).await
         }
         _ => {
             command.create_interaction_response(&ctx.http, |response| {

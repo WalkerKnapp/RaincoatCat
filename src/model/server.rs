@@ -10,7 +10,9 @@ pub struct Model {
     pub verified_role_id: Option<i64>,
     pub verification_message_id: Option<i64>,
     pub verification_emoji: Option<String>,
-    pub verification_timeout: Option<i64> // in hours
+    pub verification_timeout: Option<i64>, // in hours
+
+    pub dunce_role_id: Option<i64>
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
